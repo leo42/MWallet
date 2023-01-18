@@ -21,8 +21,8 @@ class WalletMain extends React.Component {
                 return  <WalletOverview key={this.props.root.state.selectedWallet} wallet={this.props.wallet} root={this.props.root}  ></WalletOverview>
             case "createTx":
                 return  <WalletCreateTx key={this.props.root.state.selectedWallet} wallet={this.props.wallet} root={this.props.root}  ></WalletCreateTx>
-          //  case "delegation":
-           //     return  <WalletDelegation key={this.props.root.state.selectedWallet+"delegation"} wallet={this.props.wallet} root={this.props.root}  ></WalletDelegation>
+            case "delegation":
+                return  <WalletDelegation key={this.props.root.state.selectedWallet+"delegation"} wallet={this.props.wallet} root={this.props.root}  ></WalletDelegation>
             case "pendingTxs": 
                 return( <PendingTxs key={this.props.root.state.selectedWallet+"pendingTxs"} wallet={this.props.wallet} root={this.props.root}  ></PendingTxs>)
             case "transactions": 
@@ -44,6 +44,7 @@ class WalletMain extends React.Component {
             <button value="overview" onClick={(event) => this.setState({showing: event.target.value })}>Overview</button>
             <button value="createTx" onClick={(event) => this.setState({showing: event.target.value })}>Create Transaction</button>
             <button  value="pendingTxs" onClick={(event) => this.setState({showing: event.target.value })}>Pending Txs</button>        
+            <button  value="delegation" onClick={(event) => this.setState({showing: event.target.value })}>Delegate</button>        
             <button  value="transactions" onClick={(event) => this.setState({showing: event.target.value })}>Transaction History</button>
             <button  value="receive" onClick={(event) => this.setState({showing: event.target.value })}>Receive</button>
 

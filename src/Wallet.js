@@ -19,14 +19,16 @@ class Wallet {
     //   this.wallet_script = NativeScript.new_script_all( ScriptAll.new(mintingScripts))
       this.signersNames = []
        
-      this.wallet_script = wallet_json
+      this.wallet_script = JSON.parse(JSON.stringify(wallet_json))
+      this.spending_script =  JSON.parse(JSON.stringify(wallet_json))
+      this.staking_script = JSON.parse(JSON.stringify(wallet_json))
       this.wallet_address = "";
       this.name=name
       this.defaultAddress= ""
       this.txDetails = {}
       this.pendingTxs = [];
       this.addressNames = {}
-      
+      console.log(this.spending_script, this.staking_script, this.signersNames)
     }
 
     extractSignerNames(json) {
@@ -35,12 +37,40 @@ class Wallet {
           const element = json[key];
           if (element.type === "sig"){
             this.signersNames.push( { hash:element.keyHash , name:element.name})
+
+
+          } else if (typeof element === 'object') {
+            this.extractSignerNames(element);
+          } 
+        }
+      }
+    }
+
+    refinePaymentScript(json) {
+      for (const key in json) {
+        if (json.hasOwnProperty(key)) {
+          const element = json[key];
+          if (element.type === "sig"){
             if (element.keyHash.substring(0, 5)=== "addr_"){
-              
               element.keyHash=this.lucid.utils.getAddressDetails(element.keyHash).paymentCredential.hash
             }
           } else if (typeof element === 'object') {
-            this.extractSignerNames(element);
+            this.refinePaymentScript(element);
+          } 
+        }
+      }
+    }
+
+    refineStakingScript(json) {
+      for (const key in json) {
+        if (json.hasOwnProperty(key)) {
+          const element = json[key];
+          if (element.type === "sig"){
+            if (element.keyHash.substring(0, 5)=== "addr_"){
+              element.keyHash=this.lucid.utils.getAddressDetails(element.keyHash).stakeCredential.hash
+            }
+          } else if (typeof element === 'object') {
+            this.refineStakingScript(element);
           } 
         }
       }
@@ -71,9 +101,13 @@ class Wallet {
         settings.network
       }
       
-      this.extractSignerNames(this.wallet_script)
 
-      this.lucidNativeScript = this.lucid.utils.nativeScriptFromJson(this.wallet_script )
+      this.refinePaymentScript(this.spending_script)
+      this.extractSignerNames(this.spending_script)
+      this.refineStakingScript(this.staking_script)
+      console.log(this.spending_script, this.staking_script, this.signersNames)
+      this.lucidNativeScript = this.lucid.utils.nativeScriptFromJson(this.spending_script )
+      this.lucidNativeStakingScript = this.lucid.utils.nativeScriptFromJson(this.staking_script )
       this.lucid.selectWalletFrom(  { "address":this.getAddress()})
       await this.loadUtxos()
 
@@ -147,7 +181,7 @@ class Wallet {
  }
 
     getAddress(stakingAddress="") {
-        const rewardAddress = stakingAddress === "" ? this.lucid.utils.validatorToScriptHash(this.lucidNativeScript) : this.lucid.utils.getAddressDetails(stakingAddress).stakeCredential.hash
+        const rewardAddress = stakingAddress === "" ? this.lucid.utils.validatorToScriptHash(this.lucidNativeStakingScript) : this.lucid.utils.getAddressDetails(stakingAddress).stakeCredential.hash
         return this.lucid.utils.validatorToAddress(this.lucidNativeScript, {type:"key", hash: rewardAddress} )
     }
 
@@ -197,7 +231,7 @@ class Wallet {
     }
 
     checkSigners(signers){
-        const json=this.wallet_script
+        const json=this.spending_script
         console.log(json)
         const that = this
         let requires_before = false
@@ -364,7 +398,8 @@ class Wallet {
 
       const tx =  new   TxComplete(this.lucid, Transaction.from_bytes(uint8Array)) 
  //     tx.txBuilder = 
-      
+      const txInfo = this.decodeTransaction(tx)
+      if (!tx.txComplete.is_valid()) {throw new Error('Transaction is not valid');}
 
       try{
         this.pendingTxs.map( (PendingTx) => {
@@ -385,7 +420,7 @@ class Wallet {
 
     async createDelegationTx(pool, signers){ 
 
-      const rewardAddress =  this.lucid.utils.credentialToRewardAddress(this.lucid.utils.getAddressDetails(this.getAddress()).paymentCredential)
+      const rewardAddress =  this.lucid.utils.validatorToRewardAddress(this.lucidNativeStakingScript)
       if (!this.checkSigners(signers)){
         console.log("Not enough signers")
         return "Not enough signers"
@@ -397,13 +432,27 @@ class Wallet {
         tx.addSignerKey(value)
       ))
       
-      const completedTx = await tx.payToAddress(this.getAddress(),{lovelace: 5000000})
-      //  .delegateTo(rewardAddress,pool)
+      tx.payToAddress(this.getAddress(),{lovelace: 5000000})
+       // .delegateTo(rewardAddress,pool)
       .attachSpendingValidator(this.lucidNativeScript)
-      .delegateTo(rewardAddress,pool)
-      .complete()
+      .attachWithdrawalValidator(this.lucidNativeStakingScript)
+      .registerStake(rewardAddress)
+   
+   
+      const uint8Array = new Uint8Array(this.lucid.utils.validatorToScriptHash(this.lucidNativeStakingScript).match(/.{2}/g).map(byte => parseInt(byte, 16)));
+
+      C.StakeDelegation.new(
+          tx.txBuilder.add_certificate(C.Certificate.new_stake_delegation(
+          C.StakeDelegation.new( C.StakeCredential.from_scripthash(
+            C.ScriptHash.from_bytes(uint8Array)  
+          ),
+          C.Ed25519KeyHash.from_bech32(pool)  
+      ))))
+
+      const completedTx =await tx.complete()
       
-      this.pendingTxs.push({tx:completedTx, signatures:[]})
+     this.pendingTxs.push({tx:completedTx, signatures:[]})
+
       return "Sucsess"
     }
 
@@ -425,6 +474,7 @@ class Wallet {
     }
     
     addSignature(signature){
+      console.log(signature)
       const signatureInfo = this.decodeSignature(signature)
       this.signersNames.some(obj => obj.keyHash === signatureInfo.signer);
 

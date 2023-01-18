@@ -39,7 +39,9 @@ class AddWalletModal extends React.Component {
   handleSubmit(event){
 
     event.preventDefault();
-    this.props.root.addWallet(this.state.json,this.state.WName)
+    console.log(this.state.json)
+
+    this.props.root.addWallet(JSON.parse(JSON.stringify(this.state.json)),this.state.WName)
     this.props.setOpenModal(false)
   }
 
