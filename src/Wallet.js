@@ -436,7 +436,7 @@ class Wallet {
        // .delegateTo(rewardAddress,pool)
       .attachSpendingValidator(this.lucidNativeScript)
       .attachWithdrawalValidator(this.lucidNativeStakingScript)
-      //.registerStake(rewardAddress)
+      .registerStake(rewardAddress)
    
    
       const uint8Array = new Uint8Array(this.lucid.utils.validatorToScriptHash(this.lucidNativeStakingScript).match(/.{2}/g).map(byte => parseInt(byte, 16)));
