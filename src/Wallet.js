@@ -436,18 +436,18 @@ class Wallet {
        // .delegateTo(rewardAddress,pool)
       .attachSpendingValidator(this.lucidNativeScript)
       .attachWithdrawalValidator(this.lucidNativeStakingScript)
-      .registerStake(rewardAddress)
+      //.registerStake(rewardAddress)
    
    
       const uint8Array = new Uint8Array(this.lucid.utils.validatorToScriptHash(this.lucidNativeStakingScript).match(/.{2}/g).map(byte => parseInt(byte, 16)));
 
-      C.StakeDelegation.new(
+      
           tx.txBuilder.add_certificate(C.Certificate.new_stake_delegation(
           C.StakeDelegation.new( C.StakeCredential.from_scripthash(
             C.ScriptHash.from_bytes(uint8Array)  
           ),
           C.Ed25519KeyHash.from_bech32(pool)  
-      ))))
+      )))
 
       const completedTx =await tx.complete()
       
