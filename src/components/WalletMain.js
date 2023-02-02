@@ -10,7 +10,7 @@ import PendingTxs from './PendingTxs';
 
 class WalletMain extends React.Component {
     state = {
-        showing: "pendingTxs"
+        showing: "delegation"
     }
 
 

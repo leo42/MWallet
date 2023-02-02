@@ -85,7 +85,7 @@ class App extends React.Component {
     wallets: [],
     selectedWallet: 0,
     connectedWallet: "",
-    settings: { sendAll: false, network: "Preprod", explorer: "https://preprod.cardanoscan.io/" , provider: "Blockfrost" ,  api :  { url: "https://cardano-preprod.blockfrost.io/api/v0", projectId: "preprodLZ9dHVU61qVg6DSoYjxAUmIsIMRycaZp"} }
+    settings: { sendAll: false, network: "Preprod", explorer: "https://preprod.cardanoscan.io/" , provider: "Kupmios" , metadataProvider:"Koios" , api :  { kupoUrl: "https://kupo-preprod-mwallet-e048ec.us1.demeter.run", ogmiosUrl: "wss://ogmios-mwallet-e048ec.us1.demeter.run"} }
   }
 
   

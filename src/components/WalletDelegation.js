@@ -13,6 +13,7 @@ function WalletDelegation(props) {
 
   useEffect(() => {
     wallet.getDelegation().then( (delegation) => {;
+      console.log(delegation)
     setDelegation(delegation);
     })
   }, [wallet])

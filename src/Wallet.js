@@ -82,6 +82,7 @@ class Wallet {
 
     async changeSettings(settings){
       try{
+        console.log("Kupmios", settings.api.kupoUrl, settings.api.ogmiosUrl)
       if (settings.provider === "Blockfrost"){
         await this.lucid.switchProvider(new Blockfrost(settings.api.url, settings.api.projectId), settings.network)
       }else if (settings.provider === "Kupmios"){
@@ -222,7 +223,15 @@ setPendingTxs(pendingTxs){
     }
   
     async loadUtxos() {
-      this.utxos = await this.lucid.provider.getUtxos(this.lucid.utils.getAddressDetails(this.getAddress()).paymentCredential)
+      // if this.lucid.provider contains key kupoUrl then it is a kupo provider
+
+      const credential = "kupoUrl" in this.lucid.provider ? this.getAddress() : this.lucid.utils.getAddressDetails(this.getAddress()).paymentCredential
+
+       console.log( this.lucid.provider)
+      console.log("loadUtxos",this.lucid.utils.getAddressDetails(this.getAddress()).paymentCredential)
+      console.log(credential)
+
+      this.utxos = await this.lucid.provider.getUtxos(credential)
     }
     
     getPendingTxs(){
@@ -564,6 +573,7 @@ setPendingTxs(pendingTxs){
     isAddressMine(address){
       return (this.lucid.utils.getAddressDetails(address).paymentCredential.hash === this.lucid.utils.getAddressDetails(this.getAddress()).paymentCredential.hash)
     }
+
     decodeSignature(signature){
 
       try{

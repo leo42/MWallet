@@ -82,7 +82,11 @@ function SettingsModal(props) {
     })
     toast.promise(applySetting, { loading: "Applying settings", 
                                   success: "Settings applied", 
-                                  error: "Connection Failure" });
+                                  error:{
+                                    render({data}){
+                                      // When the promise reject, data will contains the error
+                                      return `message=${data.message}`
+                                    } }})
 
   }
 
