@@ -1,6 +1,5 @@
-import {  Utils , C , Lucid, Blockfrost ,ExternalWallet , TxComplete } from "./lucid/dist/esm/mod.js";
+import {  Utils , C , Lucid, Blockfrost ,ExternalWallet , TxComplete, Kupmios } from "./lucid/dist/esm/mod.js";
 import Datasource  from "./Datasource";
-import { Kupmios } from "lucid-cardano";
 const { Transaction} = C;
 
 const data1 = await Datasource.from_blockfrost("preprodLZ9dHVU61qVg6DSoYjxAUmIsIMRycaZp")
@@ -224,14 +223,7 @@ setPendingTxs(pendingTxs){
   
     async loadUtxos() {
       // if this.lucid.provider contains key kupoUrl then it is a kupo provider
-
-      const credential = "kupoUrl" in this.lucid.provider ? this.getAddress() : this.lucid.utils.getAddressDetails(this.getAddress()).paymentCredential
-
-       console.log( this.lucid.provider)
-      console.log("loadUtxos",this.lucid.utils.getAddressDetails(this.getAddress()).paymentCredential)
-      console.log(credential)
-
-      this.utxos = await this.lucid.provider.getUtxos(credential)
+      this.utxos = await this.lucid.provider.getUtxos(this.lucid.utils.getAddressDetails(this.getAddress()).paymentCredential)
     }
     
     getPendingTxs(){
